@@ -1,0 +1,53 @@
+name: Update Customer Concierge Report
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "Optional start date YYYY-MM-DD. Example: 2025-05-07"
+        required: false
+        type: string
+      end_date:
+        description: "Optional end date YYYY-MM-DD. Example: 2026-05-07. End date is inclusive."
+        required: false
+        type: string
+  schedule:
+    # Runs every day at 09:00 UTC. Adjust if you want.
+    - cron: "0 9 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-report:
+    runs-on: ubuntu-latest
+
+    env:
+      SHOPIFY_STORE_CORRO: ${{ secrets.SHOPIFY_STORE_CORRO }}
+      SHOPIFY_TOKEN_CORRO: ${{ secrets.SHOPIFY_TOKEN_CORRO }}
+      SHEET_ID_CORRO: ${{ secrets.SHEET_ID_CORRO }}
+      GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+      SHOPIFY_API_VERSION: ${{ vars.SHOPIFY_API_VERSION || '2026-04' }}
+      REPORT_START_DATE: ${{ github.event.inputs.start_date || vars.REPORT_START_DATE }}
+      REPORT_END_DATE: ${{ github.event.inputs.end_date || vars.REPORT_END_DATE }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate report and update Google Sheet
+        run: python customer_concierge_report.py
+
+      - name: Commit updated dashboard data
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update customer concierge report data"
+          file_pattern: data/report.json
