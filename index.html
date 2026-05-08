@@ -7,190 +7,65 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --navy:#0C1B2E;--green:#3DBF7A;--gold:#D4A017;--red:#F87171;
-  --tx:#F2F1ED;--tx2:#B8B7B0;--tx3:#7A7972;--bd:#2A3748;--bd2:#364455;
-  --sf:#111A28;--sf2:#162030;--sf3:#1C2A3A;
-}
-[data-theme="light"]{
-  --navy:#0C1B2E;--green:#27A558;--gold:#A8790A;--red:#C24141;
-  --tx:#0C1B2E;--tx2:#3D4F62;--tx3:#6B7D8E;--bd:#D0D8E3;--bd2:#B8C4D0;
-  --sf:#FFFFFF;--sf2:#F4F6FA;--sf3:#EBEEF5;
-}
-html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--sf);color:var(--tx);font-size:14px}
-.topbar{background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:14px 28px;gap:16px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.06)}
-.brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.brand-logo{width:23px;height:23px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center}.brand-logo svg{width:13px;height:13px}.brand-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em}.brand-div{width:1px;height:16px;background:rgba(255,255,255,.2)}.brand-sub{font-size:11px;color:rgba(255,255,255,.52);font-weight:700;letter-spacing:.04em;text-transform:uppercase}.pb-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.58);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:3px 12px}.pb-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
-.top-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.78);cursor:pointer;font-size:11px;font-weight:800;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;text-decoration:none}.btn:hover{border-color:var(--green);color:var(--green)}.tbtn{width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
-.content{padding:20px 28px}.hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap}.h-title{font-family:'Syne',sans-serif;font-size:29px;font-weight:800;letter-spacing:-.055em;line-height:1.05}.h-sub{font-size:12px;color:var(--tx3);margin-top:6px;max-width:820px;line-height:1.5}.search-wrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.search{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx);background:var(--sf2);border:1px solid var(--bd2);border-radius:8px;padding:8px 11px;outline:none;width:310px;transition:border-color .15s}.search:focus{border-color:var(--green)}select{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx);background:var(--sf2);border:1px solid var(--bd2);border-radius:8px;padding:8px 26px 8px 10px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='9' height='5' viewBox='0 0 9 5' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l3.5 3 3.5-3' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center}
-.kg{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:16px}.kc{background:var(--sf2);border:1px solid var(--bd);border-top:2px solid var(--kc,var(--bd));border-radius:12px;padding:14px 16px}.kl{font-size:9px;color:var(--tx3);font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px}.kv{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.04em;line-height:1}.ks{font-size:10px;color:var(--tx3);margin-top:4px;line-height:1.35}.tabs{display:flex;gap:2px;flex-wrap:wrap;margin-bottom:14px;padding:4px;background:var(--sf2);border:1px solid var(--bd);border-radius:11px}.tab{font-size:11px;font-weight:800;padding:7px 13px;border-radius:8px;cursor:pointer;border:none;background:transparent;color:var(--tx3);font-family:'DM Sans',sans-serif;transition:all .15s}.tab.on{background:var(--navy);color:#fff}.tab:hover:not(.on){background:var(--sf3);color:var(--tx2)}.panel{display:none}.panel.on{display:block}
-.grid2{display:grid;grid-template-columns:310px 1fr;gap:12px;align-items:start}.side{display:flex;flex-direction:column;gap:8px;position:sticky;top:12px;max-height:calc(100vh - 120px);overflow:auto;padding-right:2px}.card{background:var(--sf2);border:1px solid var(--bd);border-left:3px solid var(--green);border-radius:11px;padding:12px 14px;cursor:pointer;transition:all .12s}.card:hover,.card.active{background:var(--sf3);border-left-width:5px}.card-name{font-size:12px;font-weight:800;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card-email{font-size:10px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.card-row{display:flex;justify-content:space-between;font-size:11px;margin-top:6px}.card-row span:first-child{color:var(--tx3)}.card-row span:last-child{font-family:'DM Mono',monospace;color:var(--tx)}
-.tw{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:12px}.th{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);gap:10px;flex-wrap:wrap;background:var(--sf2)}.tt{font-size:13px;font-weight:800;color:var(--tx)}.tn{font-size:10px;color:var(--tx3);line-height:1.4}.ts{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px}thead th{padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--tx3);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--bd);background:var(--sf3);white-space:nowrap}thead th.r{text-align:right}thead th.gp{color:var(--green);border-left:2px solid rgba(61,191,122,.2)}thead th.dc{color:var(--red);border-left:2px solid rgba(248,113,113,.2)}tbody tr{border-bottom:1px solid var(--bd);transition:background .1s}tbody tr:hover{background:var(--sf3)}td{padding:8px 10px;color:var(--tx2);vertical-align:middle;white-space:nowrap}td.r{text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--tx)}td.nm{color:var(--tx);font-weight:700;max-width:260px;white-space:normal}td.nm small{display:block;font-size:10px;color:var(--tx3);font-weight:400;margin-top:1px}.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800;background:rgba(61,191,122,.13);color:var(--green);border:1px solid rgba(61,191,122,.25)}.warn{background:rgba(212,160,23,.13);color:var(--gold);border-color:rgba(212,160,23,.28)}.empty{padding:34px;text-align:center;font-size:12px;color:var(--tx3)}.loading span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin:0 2px;animation:bounce .8s infinite ease}.loading span:nth-child(2){animation-delay:.15s}.loading span:nth-child(3){animation-delay:.3s}@keyframes bounce{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
-.foot{margin-top:24px;font-size:10px;color:var(--tx3);text-align:center;padding:0 28px 18px}.foot a{color:var(--green);text-decoration:none}.foot a:hover{text-decoration:underline}@media(max-width:900px){.grid2{grid-template-columns:1fr}.side{position:static;max-height:420px}.search{width:100%}.content{padding:14px}.topbar{padding:12px 16px}}
+:root{--navy:#0C1B2E;--green:#3DBF7A;--gold:#D4A017;--red:#F87171;--tx:#F2F1ED;--tx2:#B8B7B0;--tx3:#7A7972;--bd:#2A3748;--bd2:#364455;--sf:#111A28;--sf2:#162030;--sf3:#1C2A3A}
+[data-theme="light"]{--navy:#0C1B2E;--green:#27A558;--gold:#A8790A;--red:#C24141;--tx:#0C1B2E;--tx2:#3D4F62;--tx3:#6B7D8E;--bd:#D0D8E3;--bd2:#B8C4D0;--sf:#FFFFFF;--sf2:#F4F6FA;--sf3:#EBEEF5}
+html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--sf);color:var(--tx);font-size:14px}.topbar{background:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:14px 28px;gap:16px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.06)}.brand{display:flex;align-items:center;gap:10px}.logo{width:22px;height:22px;background:var(--green);border-radius:50%}.brand-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff}.brand-sub{font-size:11px;color:rgba(255,255,255,.5);font-weight:600;letter-spacing:.06em;text-transform:uppercase}.badge-top{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.65);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 12px}.dot{width:6px;height:6px;border-radius:50%;background:var(--green)}.controls{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}.sg{display:flex;flex-direction:column;gap:3px}.lbl{font-size:9px;font-weight:800;color:rgba(255,255,255,.42);text-transform:uppercase;letter-spacing:.12em}select,input{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx);background:var(--sf2);border:1px solid var(--bd2);border-radius:8px;padding:7px 10px;outline:none}select.top,input.top{color:#fff;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)}select:focus,input:focus{border-color:var(--green)}.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:rgba(255,255,255,.78);cursor:pointer;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif}.btn:hover{border-color:var(--green);color:var(--green)}.content{padding:20px 28px}.kg{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:14px}.kc{background:var(--sf2);border:1px solid var(--bd);border-top:2px solid var(--kc,var(--bd));border-radius:12px;padding:14px 16px}.kl{font-size:9px;color:var(--tx3);font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}.kv{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.04em;line-height:1}.ks{font-size:10px;color:var(--tx3);margin-top:4px}.filter{display:flex;align-items:center;gap:8px;margin:12px 0;flex-wrap:wrap}.tabs{display:flex;gap:3px;flex-wrap:wrap;margin:14px 0;padding:4px;background:var(--sf2);border:1px solid var(--bd);border-radius:11px}.tab{font-size:11px;font-weight:700;padding:7px 12px;border-radius:8px;border:none;background:transparent;color:var(--tx3);cursor:pointer;font-family:'DM Sans',sans-serif}.tab.on{background:var(--navy);color:#fff}.panel{display:none}.panel.on{display:block}.tw{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:12px}.th{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);gap:10px;flex-wrap:wrap}.tt{font-size:13px;font-weight:800;color:var(--tx)}.tn{font-size:10px;color:var(--tx3)}.ts{overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}thead th{padding:8px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--tx3);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--bd);background:var(--sf3);white-space:nowrap}thead th.r{text-align:right}thead th.gp{color:var(--green)}thead th.dc{color:var(--red)}tbody tr{border-bottom:1px solid var(--bd)}tbody tr:hover{background:var(--sf3)}td{padding:8px 10px;color:var(--tx2);vertical-align:middle;white-space:nowrap}td.r{text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--tx)}td.nm{color:var(--tx);font-weight:700;max-width:240px;white-space:normal}td.nm small{display:block;font-size:10px;color:var(--tx3);font-weight:500;margin-top:2px}.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;background:rgba(61,191,122,.13);color:var(--green);border:1px solid rgba(61,191,122,.28)}.warn{background:rgba(248,113,113,.13);color:var(--red);border-color:rgba(248,113,113,.28)}.empty{padding:32px;text-align:center;font-size:12px;color:var(--tx3)}.grid2{display:grid;grid-template-columns:280px 1fr;gap:12px;align-items:start}.side{display:flex;flex-direction:column;gap:8px;position:sticky;top:12px}.card{background:var(--sf2);border:1px solid var(--bd);border-left:3px solid var(--green);border-radius:11px;padding:12px 14px;cursor:pointer}.card.active,.card:hover{background:var(--sf3)}.card-title{font-size:11px;font-weight:800;color:var(--tx)}.card-sub{font-size:10px;color:var(--tx3);margin-top:3px}.foot{margin-top:24px;font-size:10px;color:var(--tx3);text-align:center;padding:0 28px 24px}@media(max-width:900px){.grid2{grid-template-columns:1fr}.side{position:static}.content{padding:14px}.topbar{padding:12px 16px}}
 </style>
 </head>
 <body>
 <div class="topbar">
-  <div class="brand">
-    <div class="brand-logo"><svg viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#fff" stroke-width="1.2"/><path d="M4 6h4M6 4v4" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg></div>
-    <div class="brand-name">Corro</div><div class="brand-div"></div><div class="brand-sub">Customer Concierge</div>
-    <div class="pb-badge"><div class="pb-dot"></div><span id="periodBadge">Loading…</span></div>
-  </div>
-  <div class="top-controls">
-    <button class="btn" onclick="loadAll(true)">Refresh</button>
-    <button class="tbtn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme">☀</button>
+  <div class="brand"><div class="logo"></div><div class="brand-name">Corro</div><div class="brand-sub">Customer Concierge</div><div class="badge-top"><span class="dot"></span><span id="periodBadge">Loading…</span></div></div>
+  <div class="controls">
+    <div class="sg"><div class="lbl">Range</div><select class="top" id="rangeSelect" onchange="setRange(this.value)"><option>Loading…</option></select></div>
+    <button class="btn" onclick="loadAll(true)">↻ Refresh</button>
+    <button class="btn" id="themeBtn" onclick="toggleTheme()">☀</button>
   </div>
 </div>
-
 <div class="content">
-  <div class="hero">
-    <div>
-      <div class="h-title">Customer Concierge Report</div>
-      <div class="h-sub">Rolling-year Shopify customer performance: customer name, email, phone, order count, first/last order dates, top month, gross sales, discounts, net sales, COGS and gross profit.</div>
-    </div>
-    <div class="search-wrap">
-      <input class="search" id="search" oninput="renderCustomers();renderCards();" placeholder="Search customer, email or phone…">
-      <select id="sortBy" onchange="renderCustomers();renderCards();">
-        <option value="net_sales">Sort by Net Sales</option>
-        <option value="orders">Sort by Orders</option>
-        <option value="gross_profit">Sort by Gross Profit</option>
-        <option value="gross_margin">Sort by GP %</option>
-        <option value="last_order_date">Sort by Last Order</option>
-      </select>
-    </div>
+  <div class="filter">
+    <input id="search" oninput="renderCurrent()" placeholder="Search customer, email, phone…" style="min-width:280px">
+    <select id="sortBy" onchange="renderCurrent()">
+      <option value="net_sales">Sort by Net Sales</option><option value="orders">Sort by Orders</option><option value="gross_profit">Sort by Gross Profit</option><option value="gross_margin">Sort by GP %</option><option value="last_order_date">Sort by Last Order</option>
+    </select>
+    <span class="tn" id="rangeCount">—</span>
   </div>
-
   <div class="kg">
     <div class="kc" style="--kc:var(--green)"><div class="kl">Net Sales</div><div class="kv" id="kNet">—</div><div class="ks">After discounts</div></div>
     <div class="kc" style="--kc:var(--green)"><div class="kl">Gross Profit</div><div class="kv" id="kGp">—</div><div class="ks" id="kGm">—</div></div>
     <div class="kc" style="--kc:var(--red)"><div class="kl">Discounts</div><div class="kv" id="kDisc">—</div><div class="ks">Total discount value</div></div>
     <div class="kc" style="--kc:var(--gold)"><div class="kl">Gross Sales</div><div class="kv" id="kGross">—</div><div class="ks">Before discounts</div></div>
-    <div class="kc" style="--kc:var(--tx3)"><div class="kl">Customers</div><div class="kv" id="kCust">—</div><div class="ks">Customers with orders</div></div>
+    <div class="kc" style="--kc:var(--tx3)"><div class="kl">Customers</div><div class="kv" id="kCust">—</div><div class="ks">With orders in range</div></div>
     <div class="kc" style="--kc:var(--tx3)"><div class="kl">Orders</div><div class="kv" id="kOrders">—</div><div class="ks" id="kAov">—</div></div>
     <div class="kc" style="--kc:var(--tx3)"><div class="kl">Top Month</div><div class="kv" id="kTopMonth" style="font-size:18px">—</div><div class="ks" id="kTopMonthSales">—</div></div>
-    <div class="kc" style="--kc:var(--gold)"><div class="kl">Missing COGS Sales</div><div class="kv" id="kMissingCogs" style="font-size:20px">—</div><div class="ks">Sales with unit cost = 0</div></div>
-    <div class="kc" style="--kc:var(--tx3)"><div class="kl">Updated</div><div class="kv" id="kUpdated" style="font-size:13px;margin-top:5px">—</div><div class="ks">Generated by GitHub Actions</div></div>
+    <div class="kc" style="--kc:var(--gold)"><div class="kl">Missing COGS Sales</div><div class="kv" id="kMissingCogs" style="font-size:20px">—</div><div class="ks">Unit cost = 0</div></div>
+    <div class="kc" style="--kc:var(--tx3)"><div class="kl">Updated</div><div class="kv" id="kUpdated" style="font-size:13px;margin-top:5px">—</div><div class="ks">GitHub Actions</div></div>
   </div>
-
-  <div class="tabs">
-    <button class="tab on" data-tab="customers">Customers</button>
-    <button class="tab" data-tab="detail">Customer Detail</button>
-    <button class="tab" data-tab="months">Monthly Detail</button>
-    <button class="tab" data-tab="raw">Raw Order Lines</button>
-  </div>
-
-  <div class="panel on" id="p-customers">
-    <div class="tw"><div class="th"><div><div class="tt">Top Customers</div><div class="tn">Ranked by the selected metric. Click a row to open customer detail.</div></div><div class="tn" id="customerCount">—</div></div><div class="ts" id="customerTable"><div class="empty"><span class="loading"><span></span><span></span><span></span></span></div></div></div>
-  </div>
-
-  <div class="panel" id="p-detail">
-    <div class="grid2">
-      <div class="side" id="customerCards"><div class="empty"><span class="loading"><span></span><span></span><span></span></span></div></div>
-      <div class="tw"><div class="th"><div><div class="tt" id="detailTitle">Customer Detail</div><div class="tn" id="detailSub">Select a customer.</div></div></div><div class="ts" id="detailTable"><div class="empty">Select a customer from the left.</div></div></div>
-    </div>
-  </div>
-
-  <div class="panel" id="p-months">
-    <div class="tw"><div class="th"><div><div class="tt">Monthly Detail</div><div class="tn">Each row represents one customer in one month.</div></div><div class="tn" id="monthCount">—</div></div><div class="ts" id="monthTable"><div class="empty"><span class="loading"><span></span><span></span><span></span></span></div></div></div>
-  </div>
-
-  <div class="panel" id="p-raw">
-    <div class="tw"><div class="th"><div><div class="tt">Raw Order Lines</div><div class="tn">Line-level source data from Shopify. Showing first 2,000 rows for browser speed.</div></div><div class="tn" id="rawCount">—</div></div><div class="ts" id="rawTable"><div class="empty"><span class="loading"><span></span><span></span><span></span></span></div></div></div>
-  </div>
+  <div class="tabs"><button class="tab on" data-tab="customers">Customers</button><button class="tab" data-tab="detail">Customer Detail</button><button class="tab" data-tab="months">Monthly Detail</button><button class="tab" data-tab="raw">Raw Preview</button></div>
+  <div class="panel on" id="p-customers"><div class="tw"><div class="th"><div><div class="tt">Customers by Selected Range</div><div class="tn">Click a customer to open detail.</div></div><div class="tn" id="customerCount">—</div></div><div class="ts" id="customerTable"><div class="empty">Loading…</div></div></div></div>
+  <div class="panel" id="p-detail"><div class="grid2"><div class="side" id="customerCards"><div class="empty">Loading…</div></div><div class="tw"><div class="th"><div><div class="tt" id="detailTitle">Customer Detail</div><div class="tn" id="detailSub">Select a customer.</div></div></div><div class="ts" id="detailTable"><div class="empty">Select a customer from the left.</div></div></div></div></div>
+  <div class="panel" id="p-months"><div class="tw"><div class="th"><div><div class="tt">Monthly Detail</div><div class="tn">Each row = customer/month in selected range.</div></div><div class="tn" id="monthCount">—</div></div><div class="ts" id="monthTable"><div class="empty">Loading…</div></div></div></div>
+  <div class="panel" id="p-raw"><div class="tw"><div class="th"><div><div class="tt">Raw Order Lines Preview</div><div class="tn" id="rawNote">Full raw lines are stored in Google Sheets.</div></div><div class="tn" id="rawCount">—</div></div><div class="ts" id="rawTable"><div class="empty">Loading…</div></div></div></div>
 </div>
-
-<div class="foot">Shopify API → Google Cloud Service Account → Google Sheets → GitHub Pages · <span id="footerUpdated">—</span></div>
-
+<div class="foot">Shopify API → GitHub Actions → Google Sheets → data/report.json → GitHub Pages · <span id="footerUpdated">—</span></div>
 <script>
-const DATA_URL = "data/report.json";
-let summary = [], customers = [], months = [], raw = [], meta = {};
-let activeCustomerKey = "";
-const G = id => document.getElementById(id);
-
-function esc(v){return String(v ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));}
-function keyForCustomer(r){return String((r.email || r.phone || r.customer_name || "guest")).toLowerCase().trim();}
-function keyForRaw(r){return String((r.customer_email || r.customer_phone || r.customer_name || "guest")).toLowerCase().trim();}
-function fmtMoney(v){const n=parseFloat(v)||0, neg=n<0, a=Math.abs(n);let s;if(a>=1e6)s="$"+(a/1e6).toFixed(2)+"M";else if(a>=1000)s="$"+(a/1000).toFixed(1)+"K";else s="$"+Math.round(a).toLocaleString();return neg?"-"+s:s;}
-function fmtN(v){const n=parseInt(v)||0;return n>=1000?(n/1000).toFixed(1)+"K":n.toLocaleString();}
-function fmtPct(v){return ((parseFloat(v)||0)*100).toFixed(1)+"%";}
-function byMetric(name){return (summary.find(r=>r.metric===name)||{}).value ?? "";}
-
-function toggleTheme(){const cur=document.documentElement.dataset.theme;const next=cur==="dark"?"light":"dark";document.documentElement.dataset.theme=next;localStorage.setItem("theme",next);G("themeBtn").textContent=next==="dark"?"☀":"☾";}
-
-function switchTab(tab){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));document.querySelectorAll(".panel").forEach(p=>p.classList.remove("on"));G("p-"+tab).classList.add("on");}
-document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>switchTab(btn.dataset.tab)));
-
-async function loadAll(force=false){
-  try{
-    const url = force ? `${DATA_URL}?t=${Date.now()}` : DATA_URL;
-    const res = await fetch(url, {cache: force ? "no-store" : "default"});
-    if(!res.ok) throw new Error(`Could not load ${DATA_URL}. Run the GitHub Action first.`);
-    const data = await res.json();
-    meta = data.meta || {}; summary = data.summary || []; customers = data.customers || []; months = data.months || []; raw = data.raw || [];
-    renderAll();
-  }catch(err){
-    const msg = esc(err.message || err);
-    G("periodBadge").textContent="No data";
-    ["customerTable","monthTable","rawTable","customerCards","detailTable"].forEach(id=>G(id).innerHTML=`<div class="empty">${msg}</div>`);
-  }
-}
-
-function renderAll(){
-  const start = byMetric("Period Start") || meta.period_start || "—";
-  const end = byMetric("Period End") || meta.period_end || "—";
-  G("periodBadge").textContent = `${start} → ${end}`;
-  const net = parseFloat(byMetric("Net Sales")) || 0;
-  const gp = parseFloat(byMetric("Gross Profit")) || 0;
-  const gm = parseFloat(byMetric("Gross Margin")) || 0;
-  const orders = parseInt(byMetric("Orders")) || 0;
-  G("kNet").textContent=fmtMoney(net);G("kGp").textContent=fmtMoney(gp);G("kGm").textContent=fmtPct(gm)+" gross margin";G("kDisc").textContent=fmtMoney(byMetric("Discounts"));G("kGross").textContent=fmtMoney(byMetric("Gross Sales"));G("kCust").textContent=fmtN(byMetric("Total Customers"));G("kOrders").textContent=fmtN(orders);G("kAov").textContent=fmtMoney(byMetric("AOV Net"))+" AOV";G("kTopMonth").textContent=byMetric("Top Month")||"—";G("kTopMonthSales").textContent=fmtMoney(byMetric("Top Month Net Sales"));G("kMissingCogs").textContent=fmtMoney(byMetric("Missing COGS Sales"));G("kUpdated").textContent=(meta.updated_at || summary[0]?.updated_at || "").slice(0,10)||"—";G("footerUpdated").textContent="Updated: "+(meta.updated_at || summary[0]?.updated_at || "—");
-  renderCustomers();renderCards();renderMonths();renderRaw();
-}
-
-function filteredCustomers(){
-  const q=(G("search").value||"").toLowerCase(); const sortBy=G("sortBy").value;
-  return [...customers].filter(r=>!q || `${r.customer_name} ${r.email} ${r.phone}`.toLowerCase().includes(q)).sort((a,b)=>{
-    if(sortBy.includes("date")) return String(b[sortBy]||"").localeCompare(String(a[sortBy]||""));
-    return (parseFloat(b[sortBy])||0)-(parseFloat(a[sortBy])||0);
-  });
-}
-
-function renderCustomers(){
-  const rows=filteredCustomers(); G("customerCount").textContent=`${rows.length} customers`;
-  if(!rows.length){G("customerTable").innerHTML=`<div class="empty">No customers found.</div>`;return;}
-  G("customerTable").innerHTML=`<table><thead><tr><th>#</th><th>Customer</th><th>Email</th><th>Phone</th><th class="r">Orders</th><th class="r">Units</th><th>First Order</th><th>Last Order</th><th>Top Month</th><th class="r">Gross Sales</th><th class="r dc">Discounts</th><th class="r">Net Sales</th><th class="r">COGS</th><th class="r gp">Gross Profit</th><th class="r gp">GP%</th><th class="r">AOV</th><th>COGS Status</th></tr></thead><tbody>${rows.map(r=>{const key=esc(keyForCustomer(r));return `<tr class="customer-row" data-key="${key}" style="cursor:pointer"><td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tx3)">${esc(r.rank)}</td><td class="nm">${esc(r.customer_name||"—")}<small>${esc(r.period_start||"")} → ${esc(r.period_end||"")}</small></td><td style="font-size:11px;color:var(--tx3)">${esc(r.email||"—")}</td><td style="font-size:11px;color:var(--tx3)">${esc(r.phone||"—")}</td><td class="r">${fmtN(r.orders)}</td><td class="r">${fmtN(r.units)}</td><td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tx3)">${esc(r.first_order_date||"—")}</td><td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tx3)">${esc(r.last_order_date||"—")}</td><td><span class="badge">${esc(r.top_month||"—")}</span></td><td class="r">${fmtMoney(r.gross_sales)}</td><td class="r" style="color:var(--red)">${fmtMoney(r.discounts)}</td><td class="r">${fmtMoney(r.net_sales)}</td><td class="r" style="color:var(--gold)">${fmtMoney(r.cogs)}</td><td class="r" style="color:var(--green);font-weight:800">${fmtMoney(r.gross_profit)}</td><td class="r" style="color:var(--green)">${fmtPct(r.gross_margin)}</td><td class="r">${fmtMoney(r.aov_net)}</td><td>${parseFloat(r.missing_cogs_sales)>0?`<span class="badge warn">Missing ${fmtMoney(r.missing_cogs_sales)}</span>`:`<span class="badge">Loaded</span>`}</td></tr>`}).join("")}</tbody></table>`;
-  document.querySelectorAll(".customer-row").forEach(tr=>tr.addEventListener("click",()=>openCustomer(tr.dataset.key)));
-}
-
-function renderCards(){
-  const rows=filteredCustomers().slice(0,120);
-  G("customerCards").innerHTML=rows.map(r=>{const key=esc(keyForCustomer(r));return `<div class="card ${activeCustomerKey===keyForCustomer(r)?"active":""}" data-key="${key}"><div class="card-name">${esc(r.customer_name||"—")}</div><div class="card-email">${esc(r.email||r.phone||"No email")}</div><div class="card-row"><span>Net Sales</span><span>${fmtMoney(r.net_sales)}</span></div><div class="card-row"><span>Orders</span><span>${fmtN(r.orders)}</span></div><div class="card-row"><span>Top Month</span><span>${esc(r.top_month||"—")}</span></div></div>`}).join("") || `<div class="empty">No customers.</div>`;
-  document.querySelectorAll("#customerCards .card").forEach(card=>card.addEventListener("click",()=>openCustomer(card.dataset.key)));
-}
-
-function openCustomer(key){
-  activeCustomerKey=key; switchTab("detail");
-  const customer=customers.find(r=>keyForCustomer(r)===key);
-  const rows=raw.filter(r=>keyForRaw(r)===key);
-  G("detailTitle").textContent=customer?.customer_name || "Customer Detail";
-  G("detailSub").textContent=customer ? `${customer.email || customer.phone || "No contact"} · ${fmtN(customer.orders)} orders · ${fmtMoney(customer.net_sales)} net sales` : "Raw order lines";
-  renderCards();
-  if(!rows.length){G("detailTable").innerHTML=`<div class="empty">No raw lines found for this customer.</div>`;return;}
-  G("detailTable").innerHTML=`<table><thead><tr><th>Order</th><th>Date</th><th>Status</th><th>Month</th><th>Product</th><th>SKU</th><th>Vendor</th><th class="r">Units</th><th class="r">Gross</th><th class="r dc">Discount</th><th class="r">Net</th><th class="r">Unit Cost</th><th class="r">COGS</th><th class="r gp">GP</th></tr></thead><tbody>${rows.map(r=>`<tr><td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);font-weight:800">${esc(r.order_name)}</td><td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tx3)">${esc(r.order_date)}</td><td>${esc(r.financial_status||"—")}</td><td><span class="badge">${esc(r.month)}</span></td><td class="nm">${esc(r.product_title||"—")}<small>${esc(r.customer_name||"")}</small></td><td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tx3)">${esc(r.sku||"—")}</td><td style="font-size:10px;color:var(--tx3)">${esc(r.vendor||"—")}</td><td class="r">${fmtN(r.units)}</td><td class="r">${fmtMoney(r.gross_sales)}</td><td class="r" style="color:var(--red)">${fmtMoney(r.discounts)}</td><td class="r">${fmtMoney(r.net_sales)}</td><td class="r" style="color:var(--gold)">${fmtMoney(r.unit_cost)}</td><td class="r" style="color:var(--gold)">${fmtMoney(r.cogs)}</td><td class="r" style="color:var(--green);font-weight:800">${fmtMoney(r.gross_profit)}</td></tr>`).join("")}</tbody></table>`;
-}
-
-function renderMonths(){
-  G("monthCount").textContent=`${months.length} rows`;
-  if(!months.length){G("monthTable").innerHTML=`<div class="empty">No monthly data.</div>`;return;}
-  G("monthTable").innerHTML=`<table><thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Month</th><th class="r">Orders</th><th class="r">Units</th><th class="r">Gross</th><th class="r dc">Discount</th><th class="r">Net</th><th class="r">COGS</th><th class="r gp">GP</th><th class="r gp">GP%</th><th>COGS Status</th></tr></thead><tbody>${months.map(r=>`<tr><td class="nm">${esc(r.customer_name||"—")}</td><td style="font-size:11px;color:var(--tx3)">${esc(r.email||"—")}</td><td style="font-size:11px;color:var(--tx3)">${esc(r.phone||"—")}</td><td><span class="badge">${esc(r.month||"—")}</span></td><td class="r">${fmtN(r.orders)}</td><td class="r">${fmtN(r.units)}</td><td class="r">${fmtMoney(r.gross_sales)}</td><td class="r" style="color:var(--red)">${fmtMoney(r.discounts)}</td><td class="r">${fmtMoney(r.net_sales)}</td><td class="r" style="color:var(--gold)">${fmtMoney(r.cogs)}</td><td class="r" style="color:var(--green);font-weight:800">${fmtMoney(r.gross_profit)}</td><td class="r" style="color:var(--green)">${fmtPct(r.gross_margin)}</td><td>${parseFloat(r.missing_cogs_sales)>0?`<span class="badge warn">Missing ${fmtMoney(r.missing_cogs_sales)}</span>`:`<span class="badge">Loaded</span>`}</td></tr>`).join("")}</tbody></table>`;
-}
-
-function renderRaw(){
-  const rows=raw.slice(0,2000); G("rawCount").textContent=`${raw.length} lines · showing first ${rows.length}`;
-  if(!rows.length){G("rawTable").innerHTML=`<div class="empty">No raw order lines.</div>`;return;}
-  G("rawTable").innerHTML=`<table><thead><tr><th>Order</th><th>Date</th><th>Status</th><th>Customer</th><th>Email</th><th>Product</th><th>SKU</th><th>COGS Status</th><th class="r">Units</th><th class="r">Gross</th><th class="r dc">Discount</th><th class="r">Net</th><th class="r">Unit Cost</th><th class="r">COGS</th><th class="r gp">GP</th></tr></thead><tbody>${rows.map(r=>`<tr><td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);font-weight:800">${esc(r.order_name)}</td><td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tx3)">${esc(r.order_date)}</td><td>${esc(r.financial_status||"—")}</td><td class="nm">${esc(r.customer_name||"—")}</td><td style="font-size:10px;color:var(--tx3)">${esc(r.customer_email||"—")}</td><td class="nm">${esc(r.product_title||"—")}<small>${esc(r.vendor||"")}</small></td><td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--tx3)">${esc(r.sku||"—")}</td><td>${r.cogs_status==="missing"?`<span class="badge warn">Missing</span>`:`<span class="badge">Loaded</span>`}</td><td class="r">${fmtN(r.units)}</td><td class="r">${fmtMoney(r.gross_sales)}</td><td class="r" style="color:var(--red)">${fmtMoney(r.discounts)}</td><td class="r">${fmtMoney(r.net_sales)}</td><td class="r" style="color:var(--gold)">${fmtMoney(r.unit_cost)}</td><td class="r" style="color:var(--gold)">${fmtMoney(r.cogs)}</td><td class="r" style="color:var(--green);font-weight:800">${fmtMoney(r.gross_profit)}</td></tr>`).join("")}</tbody></table>`;
-}
-
-(function init(){const saved=localStorage.getItem("theme");if(saved){document.documentElement.dataset.theme=saved;G("themeBtn").textContent=saved==="dark"?"☀":"☾";}loadAll();})();
+const DATA_URL="data/report.json";let meta={},ranges=[],summary=[],customers=[],months=[],raw=[],activeRangeId="",activeCustomerKey="";const G=id=>document.getElementById(id);
+function esc(v){return String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));}
+function fmtMoney(v){const n=parseFloat(v)||0,neg=n<0,a=Math.abs(n);let s;if(a>=1e6)s="$"+(a/1e6).toFixed(2)+"M";else if(a>=1000)s="$"+(a/1000).toFixed(1)+"K";else s="$"+Math.round(a).toLocaleString();return neg?"-"+s:s}function fmtN(v){const n=parseInt(v)||0;return n>=1000?(n/1000).toFixed(1)+"K":n.toLocaleString()}function fmtPct(v){return((parseFloat(v)||0)*100).toFixed(1)+"%"}
+function customerKey(r){return String((r.email||r.phone||r.customer_name||"guest")).toLowerCase().trim()}function rawKey(r){return String((r.customer_email||r.customer_phone||r.customer_name||"guest")).toLowerCase().trim()}
+function currentRange(){return ranges.find(r=>r.range_id===activeRangeId)||ranges[ranges.length-1]||{}}function currentSummary(){return summary.filter(r=>r.range_id===activeRangeId)}function byMetric(name){return(currentSummary().find(r=>r.metric===name)||{}).value??""}function curCustomers(){return customers.filter(r=>r.range_id===activeRangeId)}function curMonths(){return months.filter(r=>r.range_id===activeRangeId)}function curRaw(){return raw.filter(r=>r.range_id===activeRangeId)}
+function toggleTheme(){const cur=document.documentElement.dataset.theme,next=cur==="dark"?"light":"dark";document.documentElement.dataset.theme=next;localStorage.setItem("theme",next);G("themeBtn").textContent=next==="dark"?"☀":"☾"}
+function switchTab(tab){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));G('p-'+tab).classList.add('on')}document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+function setRange(id){activeRangeId=id;activeCustomerKey="";renderCurrent()}
+async function loadAll(force=false){try{const url=force?`${DATA_URL}?t=${Date.now()}`:DATA_URL;const res=await fetch(url,{cache:force?'no-store':'default'});if(!res.ok)throw new Error(`Could not load ${DATA_URL}. Run GitHub Actions first.`);const data=await res.json();meta=data.meta||{};ranges=data.ranges||[];summary=data.summary||[];customers=data.customers||[];months=data.months||[];raw=data.raw||[];activeRangeId=meta.default_range_id||ranges.at(-1)?.range_id||"";renderRangeSelect();renderCurrent()}catch(err){const msg=esc(err.message||err);G('periodBadge').textContent='No data';['customerTable','monthTable','rawTable','customerCards','detailTable'].forEach(id=>G(id).innerHTML=`<div class="empty">${msg}</div>`)}}
+function renderRangeSelect(){G('rangeSelect').innerHTML=ranges.map(r=>`<option value="${esc(r.range_id)}" ${r.range_id===activeRangeId?'selected':''}>${esc(r.range_label)} · ${esc(r.range_status||'')}</option>`).join('')||'<option>No ranges yet</option>';G('rangeCount').textContent=`${ranges.length} saved ranges · raw JSON preview ${fmtN((meta.raw_total_rows_in_sheet||0))} rows in Sheets`}
+function renderCurrent(){const r=currentRange();G('periodBadge').textContent=r.range_label?`${r.range_label} · ${r.range_status||''}`:'No range';G('kNet').textContent=fmtMoney(byMetric('Net Sales'));G('kGp').textContent=fmtMoney(byMetric('Gross Profit'));G('kGm').textContent=fmtPct(byMetric('Gross Margin'))+' gross margin';G('kDisc').textContent=fmtMoney(byMetric('Discounts'));G('kGross').textContent=fmtMoney(byMetric('Gross Sales'));G('kCust').textContent=fmtN(byMetric('Total Customers'));G('kOrders').textContent=fmtN(byMetric('Orders'));G('kAov').textContent=fmtMoney(byMetric('AOV Net'))+' AOV';G('kTopMonth').textContent=byMetric('Top Month')||'—';G('kTopMonthSales').textContent=fmtMoney(byMetric('Top Month Net Sales'));G('kMissingCogs').textContent=fmtMoney(byMetric('Missing COGS Sales'));G('kUpdated').textContent=(meta.updated_at||'').slice(0,10)||'—';G('footerUpdated').textContent='Updated: '+(meta.updated_at||'—');renderCustomers();renderCards();renderMonths();renderRaw();}
+function filteredCustomers(){const q=(G('search').value||'').toLowerCase(),sortBy=G('sortBy').value;return[...curCustomers()].filter(r=>!q||`${r.customer_name} ${r.email} ${r.phone}`.toLowerCase().includes(q)).sort((a,b)=>sortBy.includes('date')?String(b[sortBy]||'').localeCompare(String(a[sortBy]||'')):(parseFloat(b[sortBy])||0)-(parseFloat(a[sortBy])||0))}
+function renderCustomers(){const rows=filteredCustomers();G('customerCount').textContent=`${rows.length} customers`;if(!rows.length){G('customerTable').innerHTML='<div class="empty">No customers found for this range.</div>';return}G('customerTable').innerHTML=`<table><thead><tr><th>#</th><th>Customer</th><th>Email</th><th>Phone</th><th class="r">Orders</th><th class="r">Units</th><th>First</th><th>Last</th><th>Top Month</th><th class="r">Gross</th><th class="r dc">Discounts</th><th class="r">Net</th><th class="r">COGS</th><th class="r gp">Gross Profit</th><th class="r gp">GP%</th><th class="r">AOV</th><th>COGS</th></tr></thead><tbody>${rows.map(r=>{const k=esc(customerKey(r));return`<tr data-key="${k}" style="cursor:pointer"><td style="font-family:'DM Mono';font-size:10px;color:var(--tx3)">${esc(r.rank)}</td><td class="nm">${esc(r.customer_name||'—')}<small>${esc(r.range_label||'')}</small></td><td>${esc(r.email||'—')}</td><td>${esc(r.phone||'—')}</td><td class="r">${fmtN(r.orders)}</td><td class="r">${fmtN(r.units)}</td><td>${esc(r.first_order_date||'—')}</td><td>${esc(r.last_order_date||'—')}</td><td><span class="pill">${esc(r.top_month||'—')}</span></td><td class="r">${fmtMoney(r.gross_sales)}</td><td class="r" style="color:var(--red)">${fmtMoney(r.discounts)}</td><td class="r">${fmtMoney(r.net_sales)}</td><td class="r" style="color:var(--gold)">${fmtMoney(r.cogs)}</td><td class="r" style="color:var(--green);font-weight:800">${fmtMoney(r.gross_profit)}</td><td class="r" style="color:var(--green)">${fmtPct(r.gross_margin)}</td><td class="r">${fmtMoney(r.aov_net)}</td><td>${parseFloat(r.missing_cogs_sales)>0?`<span class="pill warn">Missing ${fmtMoney(r.missing_cogs_sales)}</span>`:'<span class="pill">Loaded</span>'}</td></tr>`}).join('')}</tbody></table>`;G('customerTable').querySelectorAll('tbody tr').forEach(tr=>tr.addEventListener('click',()=>{activeCustomerKey=tr.dataset.key;switchTab('detail');renderDetail()}))}
+function renderCards(){const rows=filteredCustomers().slice(0,80);G('customerCards').innerHTML=rows.map(r=>`<div class="card ${customerKey(r)===activeCustomerKey?'active':''}" data-key="${esc(customerKey(r))}"><div class="card-title">${esc(r.customer_name||'—')}</div><div class="card-sub">${fmtMoney(r.net_sales)} · ${fmtN(r.orders)} orders · ${esc(r.top_month||'—')}</div></div>`).join('')||'<div class="empty">No customers.</div>';G('customerCards').querySelectorAll('.card').forEach(c=>c.addEventListener('click',()=>{activeCustomerKey=c.dataset.key;renderCards();renderDetail()}))}
+function renderDetail(){if(!activeCustomerKey){G('detailTable').innerHTML='<div class="empty">Select a customer.</div>';return}const lines=curRaw().filter(r=>rawKey(r)===activeCustomerKey);const cust=curCustomers().find(r=>customerKey(r)===activeCustomerKey)||{};G('detailTitle').textContent=cust.customer_name||'Customer Detail';G('detailSub').textContent=`${cust.email||'No email'} · ${cust.phone||'No phone'} · ${fmtN(lines.length)} raw preview lines`;if(!lines.length){G('detailTable').innerHTML='<div class="empty">No raw preview lines for this customer. Full raw may be only in Google Sheets if JSON limit was reached.</div>';return}G('detailTable').innerHTML=`<table><thead><tr><th>Order</th><th>Date</th><th>Product</th><th>SKU</th><th class="r">Units</th><th class="r">Gross</th><th class="r dc">Discounts</th><th class="r">Net</th><th class="r">COGS</th><th class="r gp">GP</th></tr></thead><tbody>${lines.map(r=>`<tr><td>${esc(r.order_name)}</td><td>${esc(r.order_date)}</td><td class="nm">${esc(r.product_title)}</td><td>${esc(r.sku||'—')}</td><td class="r">${fmtN(r.units)}</td><td class="r">${fmtMoney(r.gross_sales)}</td><td class="r" style="color:var(--red)">${fmtMoney(r.discounts)}</td><td class="r">${fmtMoney(r.net_sales)}</td><td class="r">${fmtMoney(r.cogs)}</td><td class="r" style="color:var(--green)">${fmtMoney(r.gross_profit)}</td></tr>`).join('')}</tbody></table>`}
+function renderMonths(){const rows=curMonths().filter(r=>{const q=(G('search').value||'').toLowerCase();return!q||`${r.customer_name} ${r.email} ${r.phone} ${r.month}`.toLowerCase().includes(q)});G('monthCount').textContent=`${rows.length} rows`;if(!rows.length){G('monthTable').innerHTML='<div class="empty">No monthly rows.</div>';return}G('monthTable').innerHTML=`<table><thead><tr><th>Month</th><th>Customer</th><th>Email</th><th class="r">Orders</th><th class="r">Units</th><th class="r">Gross</th><th class="r dc">Discounts</th><th class="r">Net</th><th class="r">COGS</th><th class="r gp">GP</th><th class="r gp">GP%</th></tr></thead><tbody>${rows.map(r=>`<tr><td><span class="pill">${esc(r.month)}</span></td><td class="nm">${esc(r.customer_name)}</td><td>${esc(r.email||'—')}</td><td class="r">${fmtN(r.orders)}</td><td class="r">${fmtN(r.units)}</td><td class="r">${fmtMoney(r.gross_sales)}</td><td class="r" style="color:var(--red)">${fmtMoney(r.discounts)}</td><td class="r">${fmtMoney(r.net_sales)}</td><td class="r">${fmtMoney(r.cogs)}</td><td class="r" style="color:var(--green)">${fmtMoney(r.gross_profit)}</td><td class="r" style="color:var(--green)">${fmtPct(r.gross_margin)}</td></tr>`).join('')}</tbody></table>`}
+function renderRaw(){const rows=curRaw();G('rawCount').textContent=`${fmtN(rows.length)} preview lines`;G('rawNote').textContent=`Full raw lines are in Google Sheets. JSON preview limit: ${fmtN(meta.raw_json_limit||0)} · Total raw rows in Sheet: ${fmtN(meta.raw_total_rows_in_sheet||0)}`;if(!rows.length){G('rawTable').innerHTML='<div class="empty">No raw preview lines for this range. Check Google Sheets for full raw.</div>';return}G('rawTable').innerHTML=`<table><thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Email</th><th>Product</th><th>SKU</th><th class="r">Units</th><th class="r">Net</th><th class="r">COGS</th><th class="r gp">GP</th></tr></thead><tbody>${rows.slice(0,2000).map(r=>`<tr><td>${esc(r.order_name)}</td><td>${esc(r.order_date)}</td><td class="nm">${esc(r.customer_name)}</td><td>${esc(r.customer_email||'—')}</td><td>${esc(r.product_title)}</td><td>${esc(r.sku||'—')}</td><td class="r">${fmtN(r.units)}</td><td class="r">${fmtMoney(r.net_sales)}</td><td class="r">${fmtMoney(r.cogs)}</td><td class="r" style="color:var(--green)">${fmtMoney(r.gross_profit)}</td></tr>`).join('')}</tbody></table>`}
+(function init(){const th=localStorage.getItem('theme')||'dark';document.documentElement.dataset.theme=th;G('themeBtn').textContent=th==='dark'?'☀':'☾';loadAll(false)})();
 </script>
 </body>
 </html>
