@@ -684,23 +684,31 @@ def sheets_service():
     return build("sheets", "v4", credentials=creds, cache_discovery=False)
 
 
-def ensure_tabs(service, spreadsheet_id: str, tab_names: list[str]) -> None:
+def ensure_tabs(service, spreadsheet_id: str, tab_headers: dict[str, list[str]]) -> None:
+    """Create missing tabs with the smallest practical grid.
+
+    Important: Google Sheets has a workbook-wide cell limit. Creating every tab
+    as 40 columns wastes millions of cells once rows grow above 100k, so each tab
+    starts with only the columns it actually needs.
+    """
     meta = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
     existing = {s["properties"]["title"] for s in meta.get("sheets", [])}
     requests_batch = []
-    for tab in tab_names:
+    for tab, headers in tab_headers.items():
         if tab not in existing:
             requests_batch.append({
                 "addSheet": {
                     "properties": {
                         "title": tab,
-                        "gridProperties": {"rowCount": 1000, "columnCount": 40},
+                        "gridProperties": {
+                            "rowCount": 100,
+                            "columnCount": max(len(headers), 1),
+                        },
                     }
                 }
             })
     if requests_batch:
         service.spreadsheets().batchUpdate(spreadsheetId=spreadsheet_id, body={"requests": requests_batch}).execute()
-
 
 def get_sheet_properties(service, spreadsheet_id: str, tab: str) -> dict[str, Any]:
     meta = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
@@ -714,18 +722,23 @@ def get_sheet_properties(service, spreadsheet_id: str, tab: str) -> dict[str, An
 def ensure_tab_size(service, spreadsheet_id: str, tab: str, needed_rows: int, needed_cols: int) -> None:
     """Resize a Google Sheets tab before writing large datasets.
 
-    Google Sheets tabs often start with only 1,000 or 5,000 rows. If we try
-    writing to A5001 while the tab has only 5,000 rows, the API throws:
-    "Range exceeds grid limits". This expands the grid first.
+    This version also *shrinks unused columns/rows* because Google Sheets has a
+    workbook-wide 10M-cell limit. The previous version kept every large tab at
+    40 columns, which made customers_by_range + customer_months_by_range consume
+    almost the full workbook before raw_order_lines_by_range could be written.
     """
     props = get_sheet_properties(service, spreadsheet_id, tab)
     grid = props.get("gridProperties", {})
     current_rows = int(grid.get("rowCount", 0) or 0)
     current_cols = int(grid.get("columnCount", 0) or 0)
 
-    # Add a buffer so the next refresh has room and does not resize on every run.
-    target_rows = max(current_rows, needed_rows + 500, 1000)
-    target_cols = max(current_cols, needed_cols + 5, 40)
+    needed_rows = max(int(needed_rows or 1), 1)
+    needed_cols = max(int(needed_cols or 1), 1)
+
+    # Small buffer only. A 500-row x 40-column buffer wastes cells at scale.
+    row_buffer = 50 if needed_rows >= 1000 else 10
+    target_rows = max(needed_rows + row_buffer, 100)
+    target_cols = needed_cols
 
     if target_rows == current_rows and target_cols == current_cols:
         return
@@ -751,7 +764,6 @@ def ensure_tab_size(service, spreadsheet_id: str, tab: str, needed_rows: int, ne
     ).execute()
     print(f"Resized {tab} to {target_rows} rows x {target_cols} columns")
 
-
 def rows_to_values(rows: list[dict[str, Any]], default_headers: list[str]) -> list[list[Any]]:
     headers = list(rows[0].keys()) if rows else default_headers
     values = [headers]
@@ -770,7 +782,7 @@ def clear_and_write_tab(service, spreadsheet_id: str, tab: str, rows: list[dict[
     ensure_tab_size(service, spreadsheet_id, tab, needed_rows, needed_cols)
 
     service.spreadsheets().values().clear(spreadsheetId=spreadsheet_id, range=f"'{tab}'").execute()
-    chunk_size = 4000
+    chunk_size = 2000
     for start_idx in range(0, len(values), chunk_size):
         chunk = values[start_idx:start_idx + chunk_size]
         service.spreadsheets().values().update(
@@ -790,12 +802,30 @@ def write_google_sheets(data: dict[str, list[dict[str, Any]]]) -> None:
         "customer_months_by_range": ["range_id", "range_label", "range_start", "range_end", "range_status", "customer_name", "email", "phone", "month", "orders", "units", "gross_sales", "discounts", "net_sales", "cogs", "gross_profit", "gross_margin", "missing_cogs_sales", "updated_at"],
         "raw_order_lines_by_range": ["range_id", "range_label", "range_start", "range_end", "order_id", "order_name", "created_at", "order_date", "month", "financial_status", "customer_id", "customer_name", "customer_email", "customer_phone", "sku", "vendor", "product_title", "units", "gross_sales", "discounts", "net_sales", "unit_cost", "cogs", "gross_profit", "cogs_status"],
     }
+
+    # Raw order lines are very large. For this Concierge working report, Google
+    # Sheets only needs summary/customers/months. The dashboard still gets a
+    # limited raw sample in data/report.json through JSON_RAW_LIMIT.
+    # Set WRITE_RAW_TO_SHEETS=true only when debugging a small/single range.
+    write_raw_to_sheets = os.getenv("WRITE_RAW_TO_SHEETS", "false").lower() == "true"
+
+    tabs = [
+        "report_ranges",
+        "summary_by_range",
+        "customers_by_range",
+        "customer_months_by_range",
+    ]
+    if write_raw_to_sheets:
+        tabs.append("raw_order_lines_by_range")
+
     service = sheets_service()
-    tabs = list(default_headers.keys())
-    ensure_tabs(service, SHEET_ID, tabs)
+    ensure_tabs(service, SHEET_ID, {tab: default_headers[tab] for tab in tabs})
+
     for tab in tabs:
         clear_and_write_tab(service, SHEET_ID, tab, data.get(tab, []), default_headers[tab])
 
+    if not write_raw_to_sheets:
+        print("Skipped raw_order_lines_by_range in Google Sheets to stay under the 10M-cell workbook limit.")
 
 def write_json(data: dict[str, list[dict[str, Any]]]) -> None:
     ranges = data.get("report_ranges", [])
