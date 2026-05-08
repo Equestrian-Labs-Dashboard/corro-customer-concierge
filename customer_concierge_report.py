@@ -702,6 +702,56 @@ def ensure_tabs(service, spreadsheet_id: str, tab_names: list[str]) -> None:
         service.spreadsheets().batchUpdate(spreadsheetId=spreadsheet_id, body={"requests": requests_batch}).execute()
 
 
+def get_sheet_properties(service, spreadsheet_id: str, tab: str) -> dict[str, Any]:
+    meta = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+    for sheet in meta.get("sheets", []):
+        props = sheet.get("properties", {})
+        if props.get("title") == tab:
+            return props
+    raise RuntimeError(f"Google Sheet tab not found: {tab}")
+
+
+def ensure_tab_size(service, spreadsheet_id: str, tab: str, needed_rows: int, needed_cols: int) -> None:
+    """Resize a Google Sheets tab before writing large datasets.
+
+    Google Sheets tabs often start with only 1,000 or 5,000 rows. If we try
+    writing to A5001 while the tab has only 5,000 rows, the API throws:
+    "Range exceeds grid limits". This expands the grid first.
+    """
+    props = get_sheet_properties(service, spreadsheet_id, tab)
+    grid = props.get("gridProperties", {})
+    current_rows = int(grid.get("rowCount", 0) or 0)
+    current_cols = int(grid.get("columnCount", 0) or 0)
+
+    # Add a buffer so the next refresh has room and does not resize on every run.
+    target_rows = max(current_rows, needed_rows + 500, 1000)
+    target_cols = max(current_cols, needed_cols + 5, 40)
+
+    if target_rows == current_rows and target_cols == current_cols:
+        return
+
+    service.spreadsheets().batchUpdate(
+        spreadsheetId=spreadsheet_id,
+        body={
+            "requests": [
+                {
+                    "updateSheetProperties": {
+                        "properties": {
+                            "sheetId": props["sheetId"],
+                            "gridProperties": {
+                                "rowCount": target_rows,
+                                "columnCount": target_cols,
+                            },
+                        },
+                        "fields": "gridProperties(rowCount,columnCount)",
+                    }
+                }
+            ]
+        },
+    ).execute()
+    print(f"Resized {tab} to {target_rows} rows x {target_cols} columns")
+
+
 def rows_to_values(rows: list[dict[str, Any]], default_headers: list[str]) -> list[list[Any]]:
     headers = list(rows[0].keys()) if rows else default_headers
     values = [headers]
@@ -712,8 +762,15 @@ def rows_to_values(rows: list[dict[str, Any]], default_headers: list[str]) -> li
 
 def clear_and_write_tab(service, spreadsheet_id: str, tab: str, rows: list[dict[str, Any]], headers: list[str]) -> None:
     values = rows_to_values(rows, headers)
+    needed_rows = max(len(values), 1)
+    needed_cols = max((len(row) for row in values), default=len(headers) or 1)
+
+    # Critical fix: expand the worksheet grid before writing chunks.
+    # Without this, large tabs like customers_by_range fail at A5001.
+    ensure_tab_size(service, spreadsheet_id, tab, needed_rows, needed_cols)
+
     service.spreadsheets().values().clear(spreadsheetId=spreadsheet_id, range=f"'{tab}'").execute()
-    chunk_size = 5000
+    chunk_size = 4000
     for start_idx in range(0, len(values), chunk_size):
         chunk = values[start_idx:start_idx + chunk_size]
         service.spreadsheets().values().update(
