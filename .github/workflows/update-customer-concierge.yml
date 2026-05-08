@@ -3,16 +3,25 @@ name: Update Customer Concierge Report
 on:
   workflow_dispatch:
     inputs:
+      mode:
+        description: "all_years = incremental ranges, force_all_years = rebuild all, single_range = only selected dates"
+        required: false
+        default: "all_years"
+        type: choice
+        options:
+          - all_years
+          - force_all_years
+          - single_range
       start_date:
-        description: "Optional start date YYYY-MM-DD. Example: 2025-05-07"
+        description: "Optional start date YYYY-MM-DD. Required only for single_range. Example: 2025-05-07"
         required: false
         type: string
       end_date:
-        description: "Optional end date YYYY-MM-DD. Example: 2026-05-07. End date is inclusive."
+        description: "Optional end date YYYY-MM-DD. End date is inclusive. Example: 2026-05-07"
         required: false
         type: string
   schedule:
-    # Runs every day at 09:00 UTC. Adjust if you want.
+    # Daily refresh. Historical closed ranges are skipped; current/open range is updated.
     - cron: "0 9 * * *"
 
 permissions:
@@ -28,8 +37,12 @@ jobs:
       SHEET_ID_CORRO: ${{ secrets.SHEET_ID_CORRO }}
       GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
       SHOPIFY_API_VERSION: ${{ vars.SHOPIFY_API_VERSION || '2026-04' }}
+      REPORT_MODE: ${{ github.event.inputs.mode || vars.REPORT_MODE || 'all_years' }}
       REPORT_START_DATE: ${{ github.event.inputs.start_date || vars.REPORT_START_DATE }}
       REPORT_END_DATE: ${{ github.event.inputs.end_date || vars.REPORT_END_DATE }}
+      HISTORICAL_START_DATE: ${{ vars.HISTORICAL_START_DATE }}
+      FORCE_REFRESH_ALL_RANGES: ${{ github.event.inputs.mode == 'force_all_years' && 'true' || vars.FORCE_REFRESH_ALL_RANGES || 'false' }}
+      JSON_RAW_LIMIT: ${{ vars.JSON_RAW_LIMIT || '5000' }}
 
     steps:
       - name: Checkout repository
@@ -43,11 +56,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Generate report and update Google Sheet
+      - name: Generate report ranges and update Google Sheet
         run: python customer_concierge_report.py
 
       - name: Commit updated dashboard data
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Update customer concierge report data"
+          commit_message: "Update customer concierge report ranges"
           file_pattern: data/report.json
