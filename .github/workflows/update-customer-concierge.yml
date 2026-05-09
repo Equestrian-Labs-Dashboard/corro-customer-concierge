@@ -60,7 +60,8 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Generate report ranges and update Google Sheet
-        run: python customer_concierge_report.py
+        timeout-minutes: 360
+        run: python -u customer_concierge_report.py -y
 
       - name: Commit updated dashboard data
         uses: stefanzweifel/git-auto-commit-action@v5
