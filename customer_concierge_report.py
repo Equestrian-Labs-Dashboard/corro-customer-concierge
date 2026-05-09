@@ -70,21 +70,71 @@ SHEET_ID = (
 GOOGLE_CREDENTIALS = os.getenv("GOOGLE_CREDENTIALS", "").strip()
 GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE", "service-account.json").strip()
 
-REPORT_MODE = (os.getenv("REPORT_MODE") or "all_years").strip().lower()
-REPORT_START_DATE = (os.getenv("REPORT_START_DATE") or os.getenv("START_DATE") or "").strip()
-REPORT_END_DATE = (os.getenv("REPORT_END_DATE") or os.getenv("END_DATE") or "").strip()
-HISTORICAL_START_DATE = (os.getenv("HISTORICAL_START_DATE") or "").strip()
+def clean_action_input(value: str) -> str:
+    """Normalize GitHub Actions text inputs.
 
-INCLUDE_CANCELLED_ORDERS = (os.getenv("INCLUDE_CANCELLED_ORDERS", "false").lower() == "true")
+    Users sometimes paste values like "end_date: 2025-12-31" instead of only
+    "2025-12-31". This keeps the project user-proof while all generated
+    report fields stay in English.
+    """
+    value = (value or "").strip()
+    if not value:
+        return ""
+    value = value.strip('\"').strip("'").strip()
+    if ":" in value:
+        left, right = value.split(":", 1)
+        if left.strip().lower() in {
+            "mode",
+            "start_date",
+            "end_date",
+            "report_start_date",
+            "report_end_date",
+            "historical_start_date",
+        }:
+            value = right.strip()
+    return value
+
+
+REPORT_MODE = clean_action_input(os.getenv("REPORT_MODE") or "all_years").lower()
+REPORT_START_DATE = clean_action_input(os.getenv("REPORT_START_DATE") or os.getenv("START_DATE") or "")
+REPORT_END_DATE = clean_action_input(os.getenv("REPORT_END_DATE") or os.getenv("END_DATE") or "")
+HISTORICAL_START_DATE = clean_action_input(os.getenv("HISTORICAL_START_DATE") or "")
+
+INCLUDE_CANCELLED_ORDERS = (clean_action_input(os.getenv("INCLUDE_CANCELLED_ORDERS", "false")).lower() == "true")
 FORCE_REFRESH_ALL_RANGES = (
     os.getenv("FORCE_REFRESH_ALL_RANGES", "false").lower() == "true"
     or REPORT_MODE == "force_all_years"
 )
 JSON_RAW_LIMIT = int(os.getenv("JSON_RAW_LIMIT", "5000"))
 
+# Concierge filter controls. By default this report includes only orders tagged as Concierge.
+# Change ONLY_CONCIERGE_TAGGED_ORDERS=false if the client later wants all Shopify orders.
+ONLY_CONCIERGE_TAGGED_ORDERS = (os.getenv("ONLY_CONCIERGE_TAGGED_ORDERS", "true").lower() == "true")
+CONCIERGE_TAG_KEYWORDS = [
+    t.strip().lower()
+    for t in os.getenv("CONCIERGE_TAG_KEYWORDS", "concierge").split(",")
+    if t.strip()
+]
+SELLER_TAG_PREFIXES = [
+    t.strip().lower()
+    for t in os.getenv(
+        "SELLER_TAG_PREFIXES",
+        "seller:,sales:,sales rep:,sales_rep:,vendedora:,vendedor:,rep:"
+    ).split(",")
+    if t.strip()
+]
+
 
 def parse_date(value: str) -> date:
-    return datetime.strptime(value, "%Y-%m-%d").date()
+    value = clean_action_input(value)
+    # Accept only the date part even if a label was pasted by mistake.
+    # Examples accepted: "2025-12-31", "end_date: 2025-12-31".
+    import re
+
+    match = re.search(r"\d{4}-\d{2}-\d{2}", value)
+    if not match:
+        raise ValueError(f"Invalid date value: {value!r}. Expected format: YYYY-MM-DD.")
+    return datetime.strptime(match.group(0), "%Y-%m-%d").date()
 
 
 def one_year_before(end: date) -> date:
@@ -121,6 +171,49 @@ def money(value: Any) -> float:
 
 def safe_text(value: Any) -> str:
     return "" if value is None else str(value).strip()
+
+
+def normalize_tag_list(tags: Any) -> list[str]:
+    if not tags:
+        return []
+    if isinstance(tags, str):
+        parts = []
+        for chunk in tags.replace(";", ",").split(","):
+            chunk = chunk.strip()
+            if chunk:
+                parts.append(chunk)
+        return parts
+    if isinstance(tags, list):
+        return [safe_text(tag) for tag in tags if safe_text(tag)]
+    return []
+
+
+def has_concierge_tag(tags: list[str]) -> bool:
+    if not CONCIERGE_TAG_KEYWORDS:
+        return True
+    lowered = [tag.lower() for tag in tags]
+    return any(any(keyword in tag for keyword in CONCIERGE_TAG_KEYWORDS) for tag in lowered)
+
+
+def extract_sales_rep(tags: list[str]) -> str:
+    for raw_tag in tags:
+        tag = raw_tag.strip()
+        lower_tag = tag.lower()
+        for prefix in SELLER_TAG_PREFIXES:
+            if lower_tag.startswith(prefix):
+                value = tag[len(prefix):].strip(" -_:|")
+                return value or tag
+    return "Unassigned"
+
+
+def split_name_fallback(full_name: str) -> tuple[str, str]:
+    name = safe_text(full_name)
+    if not name or name.lower() == "guest customer":
+        return "", ""
+    parts = name.split()
+    if len(parts) == 1:
+        return parts[0], ""
+    return parts[0], " ".join(parts[1:])
 
 
 def day_label(iso_datetime: str) -> str:
@@ -172,8 +265,13 @@ class OrderLine:
     financial_status: str
     customer_id: str
     customer_name: str
+    customer_first_name: str
+    customer_last_name: str
     customer_email: str
     customer_phone: str
+    order_tags: str
+    sales_rep: str
+    is_concierge_tagged: str
     sku: str
     vendor: str
     product_title: str
@@ -240,9 +338,12 @@ query OrdersForCorroCustomerConcierge($first: Int!, $after: String, $query: Stri
       currencyCode
       email
       phone
+      tags
       customer {
         id
         displayName
+        firstName
+        lastName
         email
         phone
       }
@@ -356,12 +457,23 @@ def fetch_order_lines_for_range(client: ShopifyClient, rr: ReportRange) -> list[
             if order.get("cancelledAt") and not INCLUDE_CANCELLED_ORDERS:
                 continue
 
+            order_tags_list = normalize_tag_list(order.get("tags") or [])
+            is_concierge = has_concierge_tag(order_tags_list)
+            if ONLY_CONCIERGE_TAGGED_ORDERS and not is_concierge:
+                continue
+
             customer = order.get("customer") or {}
             customer_id = safe_text(customer.get("id")) or "guest"
             customer_name = safe_text(customer.get("displayName")) or "Guest Customer"
+            customer_first_name = safe_text(customer.get("firstName"))
+            customer_last_name = safe_text(customer.get("lastName"))
+            if not customer_first_name and not customer_last_name:
+                customer_first_name, customer_last_name = split_name_fallback(customer_name)
             customer_email = safe_text(customer.get("email")) or safe_text(order.get("email"))
             customer_phone = safe_text(customer.get("phone")) or safe_text(order.get("phone"))
             created_at = safe_text(order.get("createdAt"))
+            order_tags = ", ".join(order_tags_list)
+            sales_rep = extract_sales_rep(order_tags_list)
 
             for item in (order.get("lineItems") or {}).get("nodes", []):
                 qty = int(item.get("quantity") or 0)
@@ -393,8 +505,13 @@ def fetch_order_lines_for_range(client: ShopifyClient, rr: ReportRange) -> list[
                     financial_status=safe_text(order.get("displayFinancialStatus")),
                     customer_id=customer_id,
                     customer_name=customer_name,
+                    customer_first_name=customer_first_name,
+                    customer_last_name=customer_last_name,
                     customer_email=customer_email,
                     customer_phone=customer_phone,
+                    order_tags=order_tags,
+                    sales_rep=sales_rep,
+                    is_concierge_tagged="YES" if is_concierge else "NO",
                     sku=safe_text(item.get("sku")) or safe_text(variant.get("sku")),
                     vendor=safe_text(item.get("vendor")),
                     product_title=safe_text(item.get("title")),
@@ -438,8 +555,13 @@ def aggregate_range(lines: list[OrderLine], rr: ReportRange) -> dict[str, list[d
         if key not in by_customer:
             by_customer[key] = {
                 "customer_name": line.customer_name,
+                "first_name": line.customer_first_name,
+                "last_name": line.customer_last_name,
                 "email": line.customer_email,
                 "phone": line.customer_phone,
+                "sales_rep_set": set(),
+                "tags_set": set(),
+                "is_concierge_tagged": line.is_concierge_tagged,
                 "orders_set": set(),
                 "first_order_date": line.order_date,
                 "last_order_date": line.order_date,
@@ -455,6 +577,12 @@ def aggregate_range(lines: list[OrderLine], rr: ReportRange) -> dict[str, list[d
 
         c = by_customer[key]
         c["orders_set"].add(line.order_name)
+        if line.sales_rep:
+            c["sales_rep_set"].add(line.sales_rep)
+        for tag in normalize_tag_list(line.order_tags):
+            c["tags_set"].add(tag)
+        if line.is_concierge_tagged == "YES":
+            c["is_concierge_tagged"] = "YES"
         c["first_order_date"] = min(c["first_order_date"], line.order_date)
         c["last_order_date"] = max(c["last_order_date"], line.order_date)
         c["units"] += line.units
@@ -471,8 +599,13 @@ def aggregate_range(lines: list[OrderLine], rr: ReportRange) -> dict[str, list[d
         if mkey not in by_customer_month:
             by_customer_month[mkey] = {
                 "customer_name": line.customer_name,
+                "first_name": line.customer_first_name,
+                "last_name": line.customer_last_name,
                 "email": line.customer_email,
                 "phone": line.customer_phone,
+                "sales_rep_set": set(),
+                "tags_set": set(),
+                "is_concierge_tagged": line.is_concierge_tagged,
                 "month": line.month,
                 "orders_set": set(),
                 "units": 0,
@@ -485,6 +618,12 @@ def aggregate_range(lines: list[OrderLine], rr: ReportRange) -> dict[str, list[d
             }
         cm = by_customer_month[mkey]
         cm["orders_set"].add(line.order_name)
+        if line.sales_rep:
+            cm["sales_rep_set"].add(line.sales_rep)
+        for tag in normalize_tag_list(line.order_tags):
+            cm["tags_set"].add(tag)
+        if line.is_concierge_tagged == "YES":
+            cm["is_concierge_tagged"] = "YES"
         cm["units"] += line.units
         cm["gross_sales"] += line.gross_sales
         cm["discounts"] += line.discounts
@@ -512,8 +651,16 @@ def aggregate_range(lines: list[OrderLine], rr: ReportRange) -> dict[str, list[d
             "range_status": rr.status,
             "rank": 0,
             "customer_name": c["customer_name"],
+            "first_name": c["first_name"],
+            "last_name": c["last_name"],
             "email": c["email"],
             "phone": c["phone"],
+            "sales_rep": "; ".join(sorted(rep for rep in c["sales_rep_set"] if rep and rep != "Unassigned")) or "Unassigned",
+            "tags": "; ".join(sorted(c["tags_set"])),
+            "is_concierge_tagged": c["is_concierge_tagged"],
+            "orders_1y": orders,
+            "gross_sales_1y": round(c["gross_sales"], 2),
+            "gross_profit_1y": round(c["gross_profit"], 2),
             "orders": orders,
             "units": c["units"],
             "first_order_date": c["first_order_date"],
@@ -531,7 +678,7 @@ def aggregate_range(lines: list[OrderLine], rr: ReportRange) -> dict[str, list[d
             "updated_at": updated_at,
         })
 
-    customers.sort(key=lambda r: r["net_sales"], reverse=True)
+    customers.sort(key=lambda r: r["gross_sales"], reverse=True)
     for i, row in enumerate(customers, 1):
         row["rank"] = i
 
@@ -546,8 +693,13 @@ def aggregate_range(lines: list[OrderLine], rr: ReportRange) -> dict[str, list[d
             "range_end": rr.end.isoformat(),
             "range_status": rr.status,
             "customer_name": cm["customer_name"],
+            "first_name": cm["first_name"],
+            "last_name": cm["last_name"],
             "email": cm["email"],
             "phone": cm["phone"],
+            "sales_rep": "; ".join(sorted(rep for rep in cm["sales_rep_set"] if rep and rep != "Unassigned")) or "Unassigned",
+            "tags": "; ".join(sorted(cm["tags_set"])),
+            "is_concierge_tagged": cm["is_concierge_tagged"],
             "month": cm["month"],
             "orders": len(cm["orders_set"]),
             "units": cm["units"],
@@ -583,6 +735,8 @@ def aggregate_range(lines: list[OrderLine], rr: ReportRange) -> dict[str, list[d
         {"range_id": rr.range_id, "range_label": rr.range_label, "range_start": rr.start.isoformat(), "range_end": rr.end.isoformat(), "range_status": rr.status, "metric": "Period End", "value": rr.end.isoformat(), "updated_at": updated_at},
         {"range_id": rr.range_id, "range_label": rr.range_label, "range_start": rr.start.isoformat(), "range_end": rr.end.isoformat(), "range_status": rr.status, "metric": "Total Customers", "value": total_customers, "updated_at": updated_at},
         {"range_id": rr.range_id, "range_label": rr.range_label, "range_start": rr.start.isoformat(), "range_end": rr.end.isoformat(), "range_status": rr.status, "metric": "Orders", "value": total_orders, "updated_at": updated_at},
+        {"range_id": rr.range_id, "range_label": rr.range_label, "range_start": rr.start.isoformat(), "range_end": rr.end.isoformat(), "range_status": rr.status, "metric": "Concierge Tagged Only", "value": "YES" if ONLY_CONCIERGE_TAGGED_ORDERS else "NO", "updated_at": updated_at},
+        {"range_id": rr.range_id, "range_label": rr.range_label, "range_start": rr.start.isoformat(), "range_end": rr.end.isoformat(), "range_status": rr.status, "metric": "Concierge Tag Keywords", "value": ", ".join(CONCIERGE_TAG_KEYWORDS), "updated_at": updated_at},
         {"range_id": rr.range_id, "range_label": rr.range_label, "range_start": rr.start.isoformat(), "range_end": rr.end.isoformat(), "range_status": rr.status, "metric": "Units", "value": total_units, "updated_at": updated_at},
         {"range_id": rr.range_id, "range_label": rr.range_label, "range_start": rr.start.isoformat(), "range_end": rr.end.isoformat(), "range_status": rr.status, "metric": "Gross Sales", "value": gross_sales, "updated_at": updated_at},
         {"range_id": rr.range_id, "range_label": rr.range_label, "range_start": rr.start.isoformat(), "range_end": rr.end.isoformat(), "range_status": rr.status, "metric": "Discounts", "value": discounts, "updated_at": updated_at},
@@ -613,6 +767,8 @@ def aggregate_range(lines: list[OrderLine], rr: ReportRange) -> dict[str, list[d
         "gross_profit": gp,
         "gross_margin": round(gp / net_sales, 4) if net_sales else 0,
         "missing_cogs_sales": missing_cogs_sales,
+        "concierge_tagged_only": "YES" if ONLY_CONCIERGE_TAGGED_ORDERS else "NO",
+        "concierge_tag_keywords": ", ".join(CONCIERGE_TAG_KEYWORDS),
         "updated_at": updated_at,
     }
 
@@ -655,7 +811,7 @@ def merge_data(existing_payload: dict[str, Any], fetched: list[dict[str, list[di
 
     merged["report_ranges"].sort(key=lambda r: safe_text(r.get("range_start")))
     merged["summary_by_range"].sort(key=lambda r: (safe_text(r.get("range_start")), safe_text(r.get("metric"))))
-    merged["customers_by_range"].sort(key=lambda r: (safe_text(r.get("range_start")), -(money(r.get("net_sales")))))
+    merged["customers_by_range"].sort(key=lambda r: (safe_text(r.get("range_start")), -(money(r.get("gross_sales")))))
     merged["customer_months_by_range"].sort(key=lambda r: (safe_text(r.get("range_start")), safe_text(r.get("month")), safe_text(r.get("email"))))
     merged["raw_order_lines_by_range"].sort(key=lambda r: (safe_text(r.get("range_start")), safe_text(r.get("created_at")), safe_text(r.get("order_name"))))
     return merged
@@ -796,11 +952,11 @@ def clear_and_write_tab(service, spreadsheet_id: str, tab: str, rows: list[dict[
 
 def write_google_sheets(data: dict[str, list[dict[str, Any]]]) -> None:
     default_headers = {
-        "report_ranges": ["range_id", "range_label", "range_start", "range_end", "range_status", "customers", "orders", "units", "gross_sales", "discounts", "net_sales", "cogs", "gross_profit", "gross_margin", "missing_cogs_sales", "updated_at"],
+        "report_ranges": ["range_id", "range_label", "range_start", "range_end", "range_status", "customers", "orders", "units", "gross_sales", "discounts", "net_sales", "cogs", "gross_profit", "gross_margin", "missing_cogs_sales", "concierge_tagged_only", "concierge_tag_keywords", "updated_at"],
         "summary_by_range": ["range_id", "range_label", "range_start", "range_end", "range_status", "metric", "value", "updated_at"],
-        "customers_by_range": ["range_id", "range_label", "range_start", "range_end", "range_status", "rank", "customer_name", "email", "phone", "orders", "units", "first_order_date", "last_order_date", "top_month", "top_month_net_sales", "gross_sales", "discounts", "net_sales", "cogs", "gross_profit", "gross_margin", "aov_net", "missing_cogs_sales", "updated_at"],
-        "customer_months_by_range": ["range_id", "range_label", "range_start", "range_end", "range_status", "customer_name", "email", "phone", "month", "orders", "units", "gross_sales", "discounts", "net_sales", "cogs", "gross_profit", "gross_margin", "missing_cogs_sales", "updated_at"],
-        "raw_order_lines_by_range": ["range_id", "range_label", "range_start", "range_end", "order_id", "order_name", "created_at", "order_date", "month", "financial_status", "customer_id", "customer_name", "customer_email", "customer_phone", "sku", "vendor", "product_title", "units", "gross_sales", "discounts", "net_sales", "unit_cost", "cogs", "gross_profit", "cogs_status"],
+        "customers_by_range": ["range_id", "range_label", "range_start", "range_end", "range_status", "rank", "customer_name", "first_name", "last_name", "email", "phone", "sales_rep", "tags", "is_concierge_tagged", "orders_1y", "gross_sales_1y", "gross_profit_1y", "orders", "units", "first_order_date", "last_order_date", "top_month", "top_month_net_sales", "gross_sales", "discounts", "net_sales", "cogs", "gross_profit", "gross_margin", "aov_net", "missing_cogs_sales", "updated_at"],
+        "customer_months_by_range": ["range_id", "range_label", "range_start", "range_end", "range_status", "customer_name", "first_name", "last_name", "email", "phone", "sales_rep", "tags", "is_concierge_tagged", "month", "orders", "units", "gross_sales", "discounts", "net_sales", "cogs", "gross_profit", "gross_margin", "missing_cogs_sales", "updated_at"],
+        "raw_order_lines_by_range": ["range_id", "range_label", "range_start", "range_end", "order_id", "order_name", "created_at", "order_date", "month", "financial_status", "customer_id", "customer_name", "customer_first_name", "customer_last_name", "customer_email", "customer_phone", "order_tags", "sales_rep", "is_concierge_tagged", "sku", "vendor", "product_title", "units", "gross_sales", "discounts", "net_sales", "unit_cost", "cogs", "gross_profit", "cogs_status"],
     }
 
     # Raw order lines are very large. For this Concierge working report, Google
@@ -842,6 +998,10 @@ def write_json(data: dict[str, list[dict[str, Any]]]) -> None:
             "shopify_store": SHOPIFY_STORE,
             "source": "Shopify Admin API + Google Sheets + GitHub Actions",
             "mode": REPORT_MODE,
+            "only_concierge_tagged_orders": ONLY_CONCIERGE_TAGGED_ORDERS,
+            "concierge_tag_keywords": CONCIERGE_TAG_KEYWORDS,
+            "seller_tag_prefixes": SELLER_TAG_PREFIXES,
+            "field_note": "First Name and Last Name are customer name fields. First Order Date and Last Order Date are order dates.",
             "default_range_id": default_range,
             "ranges_count": len(ranges),
             "raw_json_limit": JSON_RAW_LIMIT,
