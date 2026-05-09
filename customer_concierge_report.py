@@ -383,24 +383,46 @@ def range_id(start: date, end: date) -> str:
     return f"{start.isoformat()}_to_{end.isoformat()}"
 
 
+def is_full_calendar_year(start: date, end: date) -> bool:
+    return start.year == end.year and start == date(start.year, 1, 1) and end == date(start.year, 12, 31)
+
+
+def range_label(start: date, end: date, status: str) -> str:
+    """User-facing English range label used by Google Sheets and the dashboard."""
+    if start.year == end.year:
+        year = start.year
+        if status == "open":
+            return f"{year} — In Progress"
+        if is_full_calendar_year(start, end):
+            return f"{year} — Full Year"
+        return f"{year} — Partial Year"
+    return f"{start.isoformat()} → {end.isoformat()}"
+
+
 def build_calendar_year_ranges(start: date, end: date) -> list[ReportRange]:
     if start > end:
         raise ValueError("Historical start date must be before or equal to end date.")
+
+    # The Concierge report should be organized by full calendar years. If the
+    # first Shopify order was mid-year, still build that year from Jan 1 so the
+    # range reads cleanly as YYYY — Full Year.
+    current_start = date(start.year, 1, 1)
     ranges: list[ReportRange] = []
-    current_start = start
     now = today_utc()
+
     while current_start <= end:
-        current_end = min(date(current_start.year, 12, 31), end)
-        status = "open" if current_end >= now or current_start.year == now.year else "closed"
+        full_year_end = date(current_start.year, 12, 31)
+        current_end = min(full_year_end, end)
+        status = "open" if current_start.year == now.year and current_end < full_year_end else "closed"
         rid = range_id(current_start, current_end)
         ranges.append(ReportRange(
             range_id=rid,
-            range_label=f"{current_start.isoformat()} → {current_end.isoformat()}",
+            range_label=range_label(current_start, current_end, status),
             start=current_start,
             end=current_end,
             status=status,
         ))
-        current_start = current_end + timedelta(days=1)
+        current_start = full_year_end + timedelta(days=1)
     return ranges
 
 
@@ -409,10 +431,13 @@ def build_ranges(client: ShopifyClient) -> list[ReportRange]:
 
     if REPORT_MODE in {"single", "single_range", "rolling_year"}:
         start = parse_date(REPORT_START_DATE) if REPORT_START_DATE else one_year_before(end)
+        full_year_end = date(start.year, 12, 31)
+        status = "open" if start.year == today_utc().year and end < full_year_end else "closed" if is_full_calendar_year(start, end) else "open"
         rid = range_id(start, end)
-        return [ReportRange(rid, f"{start.isoformat()} → {end.isoformat()}", start, end, "open")]
+        return [ReportRange(rid, range_label(start, end, status), start, end, status)]
 
-    # Default: all years/ranges from the first Shopify order to selected/today end date.
+    # Default: all full calendar years from the first Shopify order year to the
+    # selected/today end date.
     if HISTORICAL_START_DATE:
         start = parse_date(HISTORICAL_START_DATE)
     elif REPORT_START_DATE:
@@ -1018,6 +1043,8 @@ def write_json(data: dict[str, list[dict[str, Any]]]) -> None:
 
 
 def main() -> int:
+    if any(arg in {"-y", "--yes", "--non-interactive"} for arg in sys.argv[1:]):
+        print("Non-interactive yes mode enabled.")
     require_env()
     client = ShopifyClient(SHOPIFY_STORE, SHOPIFY_TOKEN, SHOPIFY_API_VERSION)
     wanted_ranges = build_ranges(client)
