@@ -43,6 +43,9 @@ jobs:
       HISTORICAL_START_DATE: ${{ vars.HISTORICAL_START_DATE }}
       FORCE_REFRESH_ALL_RANGES: ${{ github.event.inputs.mode == 'force_all_years' && 'true' || vars.FORCE_REFRESH_ALL_RANGES || 'false' }}
       JSON_RAW_LIMIT: ${{ vars.JSON_RAW_LIMIT || '5000' }}
+      ONLY_CONCIERGE_TAGGED_ORDERS: ${{ vars.ONLY_CONCIERGE_TAGGED_ORDERS || 'true' }}
+      CONCIERGE_TAG_KEYWORDS: ${{ vars.CONCIERGE_TAG_KEYWORDS || 'concierge' }}
+      SELLER_TAG_PREFIXES: ${{ vars.SELLER_TAG_PREFIXES || 'seller:,sales:,sales rep:,sales_rep:,vendedora:,vendedor:,rep:' }}
 
     steps:
       - name: Checkout repository
